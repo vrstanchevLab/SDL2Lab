@@ -1,4 +1,4 @@
-name: Build Android App with SDL2
+name: Build Linux Game with SDL2
 
 on:
   push:
@@ -19,85 +19,17 @@ jobs:
       - name: Install required packages
         run: |
           sudo apt update
-          sudo apt install -y build-essential git wget unzip
+          sudo apt install -y build-essential git libsdl2-dev
 
-      - name: Install Android SDK and NDK
-        run: |
-          mkdir -p $HOME/android-sdk/cmdline-tools
-          wget https://dl.google.com/android/repository/commandlinetools-linux-6609375_latest.zip
-          unzip commandlinetools-linux-6609375_latest.zip -d $HOME/android-sdk/cmdline-tools
-          rm commandlinetools-linux-6609375_latest.zip
-
-          # Set up environment variables
-          echo "export ANDROID_HOME=$HOME/android-sdk" >> $GITHUB_ENV
-          echo "export PATH=$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/platform-tools:$PATH" >> $GITHUB_ENV
-
-      - name: Accept licenses
-        run: |
-          yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses
-
-      - name: Install required SDK packages
-        run: |
-          $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --sdk_root=$ANDROID_HOME "platforms;android-26" "ndk;21.4.7075529" "platform-tools" "build-tools;30.0.3"
-
-      - name: Clone SDL2 for Android
-        run: |
-          git clone https://github.com/libsdl-org/SDL.git
-          # List the contents of the SDL directory to debug
-          echo "Contents of SDL directory after cloning:"
-          ls SDL
-
-      - name: Check SDL directory structure
-        run: |
-          echo "Listing contents of SDL directory:"
-          ls SDL
-          echo "Listing contents of SDL/android directory if it exists:"
-          ls SDL/android || echo "SDL/android directory does not exist."
-
-      - name: Build SDL2 for Android
-        run: |
-          cd SDL/android || exit 1  # Exit if the directory does not exist
-          ./build-sdl.sh
-          echo "SDL2 built for Android."
-
-      - name: Compile the Android app
+      - name: Compile the Linux game
         run: |
           mkdir -p build
           cd build
-          $ANDROID_HOME/ndk/21.4.7075529/toolchains/llvm/prebuilt/linux-x86_64/bin/clang \
-            -o MyApp.so \
-            -I$ANDROID_HOME/ndk/21.4.7075529/sources/android/native_app_glue \
-            -I$ANDROID_HOME/ndk/21.4.7075529/sources/SDL2 \
-            ../main.c \
-            -lSDL2 \
-            -target aarch64-linux-android21 \
-            -fPIC
-
-      - name: Build APK
-        run: |
-          cd build
-          echo "Creating Android APK..."
-          cat <<EOF > Android.mk
-          LOCAL_PATH := \$(call my-dir)
-          include \$(CLEAR_VARS)
-          LOCAL_MODULE    := MyApp
-          LOCAL_SRC_FILES := MyApp.so
-          include \$(BUILD_SHARED_LIBRARY)
-          EOF
-
-          echo "Creating Application.mk..."
-          cat <<EOF > Application.mk
-          APP_ABI := arm64-v8a
-          APP_PLATFORM := android-26
-          EOF
-
-          cd $ANDROID_HOME/ndk/21.4.7075529/build/outputs/apk
-          ndk-build NDK_PROJECT_PATH=$ANDROID_HOME/ndk/21.4.7075529/build \
-            APP_BUILD_SCRIPT=Android.mk \
-            NDK_APPLICATION_MK=Application.mk
+          clang -o MyGame ../main.c \
+            -lSDL2
 
       - name: Upload the build artifact
         uses: actions/upload-artifact@v3
         with:
-          name: android-app
-          path: $ANDROID_HOME/ndk/21.4.7075529/build/outputs/apk/*.apk
+          name: linux-game
+          path: build/MyGame
