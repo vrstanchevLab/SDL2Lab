@@ -23,7 +23,7 @@ jobs:
       - name: Compile the iOS App
         run: |
           mkdir -p build
-          clang -o build/MyIOSApp main.c -F/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS.simulator.sdk/System/Library/Frameworks -framework SDL2 -framework UIKit -framework Foundation -framework CoreGraphics
+          clang -o build/MyIOSApp main.c -I/usr/local/include/SDL2 -L/usr/local/lib -lSDL2 -framework UIKit -framework Foundation -framework CoreGraphics
 
       - name: Upload the build artifact
         uses: actions/upload-artifact@v3
