@@ -18,23 +18,26 @@ jobs:
 
       - name: Install dependencies
         run: |
-          # Ensure Homebrew is up-to-date
           brew update
-          # Install required tools and libraries
           brew install cmake # Assuming you might need CMake for SDL2 build
 
-      - name: Clone SDL2 for iOS
+      - name: Clone SDL2 repository
         run: |
           git clone https://github.com/libsdl-org/SDL.git
           cd SDL
           git checkout main # or the desired branch/tag
-          cd Xcode-iOS
-          ./build-sdl.sh # This script should compile SDL2 for iOS
+          echo "SDL2 repository cloned."
+
+      - name: Build SDL2 for iOS
+        run: |
+          cd SDL/Xcode-iOS
+          ./build-sdl.sh
+          echo "SDL2 built for iOS."
 
       - name: Verify SDL2 Installation Path
         run: |
-          echo "SDL2 path:" $(pwd)/SDL/Xcode-iOS/build/ios/Debug-iphoneos/
-          ls SDL/Xcode-iOS/build/ios/Debug-iphoneos/include/SDL2
+          echo "SDL2 path:" $(pwd)/Xcode-iOS/build/ios/Debug-iphoneos/
+          ls Xcode-iOS/build/ios/Debug-iphoneos/include/SDL2
 
       - name: Compile the iOS App
         run: |
