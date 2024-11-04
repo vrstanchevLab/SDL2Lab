@@ -43,12 +43,20 @@ jobs:
       - name: Clone SDL2 for Android
         run: |
           git clone https://github.com/libsdl-org/SDL.git
-          # Check if the SDL directory was created
-          ls SDL  # This will list the contents to confirm
+          # List the contents of the SDL directory to debug
+          echo "Contents of SDL directory after cloning:"
+          ls SDL
+
+      - name: Check SDL directory structure
+        run: |
+          echo "Listing contents of SDL directory:"
+          ls SDL
+          echo "Listing contents of SDL/android directory if it exists:"
+          ls SDL/android || echo "SDL/android directory does not exist."
 
       - name: Build SDL2 for Android
         run: |
-          cd SDL/android
+          cd SDL/android || exit 1  # Exit if the directory does not exist
           ./build-sdl.sh
           echo "SDL2 built for Android."
 
