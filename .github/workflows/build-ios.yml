@@ -43,8 +43,8 @@ jobs:
       - name: Clone SDL2 for Android
         run: |
           git clone https://github.com/libsdl-org/SDL.git
-          cd SDL
-          git checkout main # Or specify the desired branch/tag
+          # Check if the SDL directory was created
+          ls SDL  # This will list the contents to confirm
 
       - name: Build SDL2 for Android
         run: |
