@@ -28,13 +28,16 @@ jobs:
       - name: Compile the iOS App
         run: |
           mkdir -p build
+          SDK_PATH=$(xcrun --sdk iphoneos --show-sdk-path)
           clang -v -o build/MyIOSApp main.c \
             -I/opt/homebrew/opt/sdl2/include \
             -L/opt/homebrew/opt/sdl2/lib \
             -lSDL2 \
             -framework UIKit \
             -framework Foundation \
-            -framework CoreGraphics
+            -framework CoreGraphics \
+            -isysroot $SDK_PATH \
+            -arch arm64
 
       - name: Upload the build artifact
         uses: actions/upload-artifact@v3
