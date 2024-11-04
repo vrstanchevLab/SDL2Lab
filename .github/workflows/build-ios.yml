@@ -23,16 +23,22 @@ jobs:
 
       - name: Install Android SDK and NDK
         run: |
-          mkdir -p $HOME/android-sdk $HOME/android-ndk
+          mkdir -p $HOME/android-sdk/cmdline-tools
           wget https://dl.google.com/android/repository/commandlinetools-linux-6609375_latest.zip
-          unzip commandlinetools-linux-6609375_latest.zip -d $HOME/android-sdk
+          unzip commandlinetools-linux-6609375_latest.zip -d $HOME/android-sdk/cmdline-tools
           rm commandlinetools-linux-6609375_latest.zip
+
+          # Set up environment variables
           echo "export ANDROID_HOME=$HOME/android-sdk" >> $GITHUB_ENV
           echo "export PATH=$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/platform-tools:$PATH" >> $GITHUB_ENV
-          yes | sdkmanager --sdk_root=$HOME/android-sdk "platforms;android-26" "ndk;21.4.7075529" "platform-tools" "build-tools;30.0.3"
 
       - name: Accept licenses
-        run: yes | sdkmanager --licenses
+        run: |
+          yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses
+
+      - name: Install required SDK packages
+        run: |
+          $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --sdk_root=$ANDROID_HOME "platforms;android-26" "ndk;21.4.7075529" "platform-tools" "build-tools;30.0.3"
 
       - name: Clone SDL2 for Android
         run: |
@@ -52,8 +58,8 @@ jobs:
           cd build
           $ANDROID_HOME/ndk/21.4.7075529/toolchains/llvm/prebuilt/linux-x86_64/bin/clang \
             -o MyApp.so \
-            -I$HOME/android-sdk/ndk/21.4.7075529/sources/android/native_app_glue \
-            -I$HOME/android-sdk/ndk/21.4.7075529/sources/SDL2 \
+            -I$ANDROID_HOME/ndk/21.4.7075529/sources/android/native_app_glue \
+            -I$ANDROID_HOME/ndk/21.4.7075529/sources/SDL2 \
             ../main.c \
             -lSDL2 \
             -target aarch64-linux-android21 \
@@ -77,8 +83,8 @@ jobs:
           APP_PLATFORM := android-26
           EOF
 
-          cd $HOME/android-sdk/ndk/21.4.7075529/build/outputs/apk
-          ndk-build NDK_PROJECT_PATH=$HOME/android-sdk/ndk/21.4.7075529/build \
+          cd $ANDROID_HOME/ndk/21.4.7075529/build/outputs/apk
+          ndk-build NDK_PROJECT_PATH=$ANDROID_HOME/ndk/21.4.7075529/build \
             APP_BUILD_SCRIPT=Android.mk \
             NDK_APPLICATION_MK=Application.mk
 
@@ -86,4 +92,4 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: android-app
-          path: $HOME/android-sdk/ndk/21.4.7075529/build/outputs/apk/*.apk
+          path: $ANDROID_HOME/ndk/21.4.7075529/build/outputs/apk/*.apk
