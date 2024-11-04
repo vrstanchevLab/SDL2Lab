@@ -16,22 +16,33 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
 
-      - name: Install SDL2
+      - name: Install dependencies
         run: |
-          brew install sdl2 sdl2_image sdl2_mixer sdl2_ttf
+          # Ensure Homebrew is up-to-date
+          brew update
+          # Install required tools and libraries
+          brew install cmake # Assuming you might need CMake for SDL2 build
+
+      - name: Clone SDL2 for iOS
+        run: |
+          git clone https://github.com/libsdl-org/SDL.git
+          cd SDL
+          git checkout main # or the desired branch/tag
+          cd Xcode-iOS
+          ./build-sdl.sh # This script should compile SDL2 for iOS
 
       - name: Verify SDL2 Installation Path
         run: |
-          echo "SDL2 path:" $(brew --prefix sdl2)
-          ls /opt/homebrew/opt/sdl2/include/SDL2
+          echo "SDL2 path:" $(pwd)/SDL/Xcode-iOS/build/ios/Debug-iphoneos/
+          ls SDL/Xcode-iOS/build/ios/Debug-iphoneos/include/SDL2
 
       - name: Compile the iOS App
         run: |
           mkdir -p build
           SDK_PATH=$(xcrun --sdk iphoneos --show-sdk-path)
           clang -v -o build/MyIOSApp main.c \
-            -I/opt/homebrew/opt/sdl2/include \
-            -L/opt/homebrew/opt/sdl2/lib \
+            -I$(pwd)/SDL/Xcode-iOS/build/ios/Debug-iphoneos/include \
+            -L$(pwd)/SDL/Xcode-iOS/build/ios/Debug-iphoneos/lib \
             -lSDL2 \
             -framework UIKit \
             -framework Foundation \
