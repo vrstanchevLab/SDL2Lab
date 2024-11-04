@@ -20,10 +20,16 @@ jobs:
         run: |
           brew install sdl2 sdl2_image sdl2_mixer sdl2_ttf
 
+      - name: Find SDL2 path
+        run: |
+          echo "SDL2 installed at:" $(brew --prefix sdl2)
+          ls $(brew --prefix sdl2)/include/SDL2
+
       - name: Compile the iOS App
         run: |
           mkdir -p build
-          clang -o build/MyIOSApp main.c -I/usr/local/include/SDL2 -L/usr/local/lib -lSDL2 -framework UIKit -framework Foundation -framework CoreGraphics
+          SDL2_PATH=$(brew --prefix sdl2)
+          clang -o build/MyIOSApp main.c -I$SDL2_PATH/include/SDL2 -L$SDL2_PATH/lib -lSDL2 -framework UIKit -framework Foundation -framework CoreGraphics
 
       - name: Upload the build artifact
         uses: actions/upload-artifact@v3
