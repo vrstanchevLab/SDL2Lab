@@ -1,0 +1,71 @@
+name: SDL2 Android Build
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Step 1: Checkout the repository
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      # Step 2: Set up Android NDK
+      - name: Set Up Android NDK
+        uses: android-actions/setup-ndk@v2
+        with:
+          ndk-version: r25c
+
+      # Step 3: Install build tools
+      - name: Install Dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y cmake zipalign
+
+      # Step 4: Build the SDL2 app
+      - name: Build SDL2 App
+        run: |
+          mkdir -p build
+          cd build
+          cmake .. \
+            -DCMAKE_TOOLCHAIN_FILE=$ANDROID_NDK_HOME/build/cmake/android.toolchain.cmake \
+            -DANDROID_ABI=armeabi-v7a \
+            -DANDROID_PLATFORM=android-24
+          make
+
+      # Step 5: Package APK
+      - name: Package APK
+        run: |
+          mkdir -p build/apk-output
+          cd build
+          aapt package -f -m -F apk-output/unsigned.apk \
+            -M ../AndroidManifest.xml \
+            -S ../res \
+            -I $ANDROID_SDK/platforms/android-24/android.jar
+          zipalign -v -p 4 apk-output/unsigned.apk apk-output/aligned.apk
+
+      # Step 6: Sign APK (optional; uses secrets for keystore)
+      - name: Sign APK
+        env:
+          KEYSTORE: ${{ secrets.KEYSTORE }}
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+        run: |
+          echo "$KEYSTORE" | base64 -d > keystore.jks
+          apksigner sign --ks keystore.jks --ks-pass pass:$KEYSTORE_PASSWORD \
+            --key-pass pass:$KEY_PASSWORD --out apk-output/MyApp.apk apk-output/aligned.apk
+
+      # Step 7: Upload APK Artifact
+      - name: Upload APK
+        uses: actions/upload-artifact@v3
+        with:
+          name: SDL2-Android-App
+          path: build/apk-output/MyApp.apk
