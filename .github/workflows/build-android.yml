@@ -47,7 +47,7 @@ jobs:
           cd build
           aapt package -f -m -F apk-output/unsigned.apk \
             -M ../AndroidManifest.xml \
-            -S ../res \
+            -S . \
             -I $ANDROID_SDK/platforms/android-24/android.jar
           zipalign -v -p 4 apk-output/unsigned.apk apk-output/aligned.apk
 
